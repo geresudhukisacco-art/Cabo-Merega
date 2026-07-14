@@ -913,7 +913,7 @@
         <nav class="sidebar-nav">
             <ul>
                 <li class="active"><a href="dashboard.html"><i class="fas fa-th-large"></i> <span data-i18n="navDashboard">Dashboard</span></a></li>
-                <li><a href="members.html"><i class="fas fa-users"></i> <span data-i18n="navMembers">Members</span></a></li>
+                <li><a href="members.html"><i class="fas fa-users"></i> <span data-i18n="navMembers">Customers</span></a></li>
                 <li><a href="savings.html"><i class="fas fa-piggy-bank"></i> <span data-i18n="navSavings">Savings</span></a></li>
                 <li><a href="deposits.html"><i class="fas fa-hand-holding-usd"></i> <span data-i18n="navDeposits">Deposits</span></a></li>
                 <li><a href="loans.html"><i class="fas fa-hand-holding-usd"></i> <span data-i18n="navLoans">Loans</span></a></li>
@@ -991,15 +991,15 @@
                     <div class="action-card" onclick="location.href='members.html'">
                         <div class="action-icon green"><i class="fas fa-user-plus"></i></div>
                         <div class="action-info">
-                            <span class="action-title" data-i18n="actionAddMember">Add Member</span>
-                            <span class="action-desc" data-i18n="actionAddMemberDesc">Register new member</span>
+                            <span class="action-title" data-i18n="actionAddCustomer">Add Customer</span>
+                            <span class="action-desc" data-i18n="actionAddCustomerDesc">Register new customer</span>
                         </div>
                     </div>
                     <div class="action-card" onclick="location.href='savings.html'">
                         <div class="action-icon blue"><i class="fas fa-coins"></i></div>
                         <div class="action-info">
                             <span class="action-title" data-i18n="actionSavings">Savings</span>
-                            <span class="action-desc" data-i18n="actionSavingsDesc">Record member savings</span>
+                            <span class="action-desc" data-i18n="actionSavingsDesc">Record customer savings</span>
                         </div>
                     </div>
                     <div class="action-card" onclick="location.href='deposits.html'">
@@ -1169,7 +1169,8 @@
             en: {
                 brandSub: 'SACCO Banking',
                 navDashboard: 'Dashboard',
-                navMembers: 'Members',
+                navCustomers: 'Customers',
+                navMembers: 'Customers', // keeping for backwards compatibility but we'll use navCustomers
                 navSavings: 'Savings',
                 navDeposits: 'Deposits',
                 navLoans: 'Loans',
@@ -1187,10 +1188,10 @@
                 welcomeTitle: 'Welcome to CABO MEREGA SACCO',
                 welcomeSub: "Here's what's happening with your SACCO today.",
                 quickActions: 'Quick Actions',
-                actionAddMember: 'Add Member',
-                actionAddMemberDesc: 'Register new member',
+                actionAddCustomer: 'Add Customer',
+                actionAddCustomerDesc: 'Register new customer',
                 actionSavings: 'Savings',
-                actionSavingsDesc: 'Record member savings',
+                actionSavingsDesc: 'Record customer savings',
                 actionDeposits: 'Deposits',
                 actionDepositsDesc: 'Registration fees & income',
                 actionLoans: 'Loans',
@@ -1227,7 +1228,7 @@
             am: {
                 brandSub: 'ሳኮ ባንክ',
                 navDashboard: 'ዳሽቦርድ',
-                navMembers: 'አባላት',
+                navMembers: 'ደንበኞች',
                 navSavings: 'ቁጠባዎች',
                 navDeposits: 'ተቀማጭ',
                 navLoans: 'ብድር',
@@ -1245,10 +1246,10 @@
                 welcomeTitle: 'እንኳን ወደ ካቦ መረጋ ሳኮ ባንክ ስርዓት በደህና መጡ',
                 welcomeSub: 'ዛሬ በሳኮዎ ውስጥ ምን እየተከናወነ እንዳለ ይመልከቱ።',
                 quickActions: 'ፈጣን እርምጃዎች',
-                actionAddMember: 'አባል ያክሉ',
-                actionAddMemberDesc: 'አዲስ አባል ይመዝገቡ',
+                actionAddCustomer: 'ደንበኛ ያክሉ',
+                actionAddCustomerDesc: 'አዲስ ደንበኛ ይመዝገቡ',
                 actionSavings: 'ቁጠባ',
-                actionSavingsDesc: 'የአባል ቁጠባ ይመዝግቡ',
+                actionSavingsDesc: 'የደንበኛ ቁጠባ ይመዝግቡ',
                 actionDeposits: 'ተቀማጭ',
                 actionDepositsDesc: 'የምዝገባ ክፍያ እና ገቢ',
                 actionLoans: 'ብድር',
@@ -1285,7 +1286,7 @@
             om: {
                 brandSub: 'Baankii SACCO',
                 navDashboard: 'Gabatee',
-                navMembers: 'Miseensota',
+                navMembers: 'Meeshaalee',
                 navSavings: 'Kusaa',
                 navDeposits: 'Kaasaa',
                 navLoans: 'Liqii',
@@ -1303,10 +1304,10 @@
                 welcomeTitle: 'BAGA NAGAYA DHUFATTAN CABO MEREGA SACCO',
                 welcomeSub: 'Har\'a SACCO keessan keessa waan ta\'e ilaalaa.',
                 quickActions: 'Gocha Dafaa',
-                actionAddMember: 'Miseensa Dabali',
-                actionAddMemberDesc: 'Miseensa haaraa galmeessi',
+                actionAddCustomer: 'Meeshaa Dabali',
+                actionAddCustomerDesc: 'Meeshaa haaraa galmeessi',
                 actionSavings: 'Kusaa',
-                actionSavingsDesc: 'Kusaa miseensaa galmeessi',
+                actionSavingsDesc: 'Kusaa meeshaa galmeessi',
                 actionDeposits: 'Kaasaa',
                 actionDepositsDesc: 'Kaffaltii galmeessaa fi galii',
                 actionLoans: 'Liqii',
@@ -1792,7 +1793,7 @@
 
                 const activities = [];
                 savingsData.forEach(s => {
-                    const memberName = membersMap[s.memberId] || 'Unknown Member';
+                    const memberName = membersMap[s.memberId] || 'Unknown Customer';
                     activities.push({
                         text: `${memberName} made a savings deposit of <strong>ETB ${Number(s.amount).toLocaleString()}</strong>`,
                         icon: 'fa-coins',
@@ -1801,7 +1802,7 @@
                     });
                 });
                 loansData.filter(l => l.status === 'active' || l.status === 'paid').forEach(l => {
-                    const memberName = membersMap[l.memberId] || 'Unknown Member';
+                    const memberName = membersMap[l.memberId] || 'Unknown Customer';
                     activities.push({
                         text: `${memberName} received a loan of <strong>ETB ${Number(l.amount).toLocaleString()}</strong>`,
                         icon: 'fa-file-invoice',
@@ -1810,7 +1811,7 @@
                     });
                 });
                 repaymentsData.forEach(r => {
-                    const memberName = membersMap[r.memberId] || 'Unknown Member';
+                    const memberName = membersMap[r.memberId] || 'Unknown Customer';
                     activities.push({
                         text: `${memberName} made a loan repayment of <strong>ETB ${Number(r.amount).toLocaleString()}</strong>`,
                         icon: 'fa-undo-alt',
