@@ -1456,7 +1456,7 @@
                 unauthorized: 'You are not authorized to perform this action.',
                 printRecorded: 'Print recorded successfully.',
                 amountInWords: 'Amount in words',
-                duplicateTT: 'This TT number and Transfer Date are already registered. Please check and try again.',
+                duplicateTT: 'This customer already has a Savings, Deposit, or Repayment record with this TT number and Transfer Date. Please check.',
                 minSavingsRequired: 'Minimum savings amount is {min} ETB. Please increase the amount.',
                 allYears: 'All Years',
                 selectYear: 'Select Year',
@@ -1526,7 +1526,7 @@
                 unauthorized: 'ይህን ተግባር ለማከናወን ፈቃድ የለዎትም።',
                 printRecorded: 'ህትመት በተሳካ ሁኔታ ተመዝግቧል።',
                 amountInWords: 'በቃላት መጠን',
-                duplicateTT: 'ይህ ቲቲ ቁጥር እና የዝውውር ቀን ቀድሞ ተመዝግቧል። እባክዎ ይፈትሹ እና እንደገና ይሞክሩ።',
+                duplicateTT: 'ይህ ደንበኛ ቀድሞ በቁጠባ፣ ተቀማጭ ወይም ክፍያ ላይ ይህን ቲቲ ቁጥር እና የዝውውር ቀን ያለው መዝገብ አለው። እባክዎ ይፈትሹ።',
                 minSavingsRequired: 'አነስተኛ የቁጠባ መጠን {min} ብር ነው። እባክዎ መጠኑን ይጨምሩ።',
                 allYears: 'ሁሉም ዓመታት',
                 selectYear: 'ዓመት ይምረጡ',
@@ -1596,7 +1596,7 @@
                 unauthorized: 'Gochaa kana raawwachuuf hayyamamtee hin jirtu.',
                 printRecorded: 'Maxxansi sirriitti galmeefame.',
                 amountInWords: 'Qaba jechootaan',
-                duplicateTT: 'Lakkoofsi TT fi guyyaan sochoosaa kun duraan galmeefame. Mirkaneessii deebi’i.',
+                duplicateTT: 'Meeshaan kun duraan kussaa, kuusaa, ykn kaffaltii keessatti lakkoofsa TT fi guyyaa sochoosaa kanaan galmee qaba. Mirkaneessii deebi\'i.',
                 minSavingsRequired: 'Hanga ummata kussaa {min} ETB dha. Maaloo qaba dabali.',
                 allYears: 'Waggaa Hunda',
                 selectYear: 'Waggaa Filadhu',
@@ -1613,6 +1613,7 @@
         let currentUserRole = 'viewer';
         let currentUserDisplayName = 'User';
         let minSavingsAmount = 0;
+        let membersList = [];
 
         function setLanguage(lang) {
             if (!translations[lang]) return;
@@ -1683,7 +1684,6 @@
             document.getElementById('sidebarOverlay').classList.toggle('active');
         }
 
-        // ===== ROLE-BASED ACCESS =====
         function canAddSavings() {
             return ['admin', 'manager', 'teller'].includes(currentUserRole);
         }
@@ -1703,13 +1703,10 @@
             const displayName = currentUserDisplayName || 'User';
             document.getElementById('userDisplayName').textContent = displayName + ' (' + roleLabel + ')';
 
-            // ---- Show/hide Audit nav link ----
             const auditNav = document.getElementById('auditNavItem');
             if (auditNav) {
                 auditNav.style.display = (currentUserRole === 'admin') ? '' : 'none';
             }
-
-            // ---- Show/hide Users nav link ----
             const usersNav = document.getElementById('usersNavItem');
             if (usersNav) {
                 usersNav.style.display = (currentUserRole === 'admin') ? '' : 'none';
@@ -1717,7 +1714,7 @@
         }
 
         // ============================================================
-        // AUDIT LOGGING (added for audit trail)
+        // AUDIT LOGGING
         // ============================================================
         async function logAudit(action, collection, documentId, changes = {}, details = '') {
             try {
@@ -1739,7 +1736,6 @@
                 });
             } catch (error) {
                 console.error('Error writing to audit log:', error);
-                // Don't throw - audit logging should not break main functionality
             }
         }
 
@@ -1821,20 +1817,8 @@
         }
 
         // ============================================================
-        // SAVINGS MODULE
+        // CUSTOMER SEARCH
         // ============================================================
-        let allSavings = [];
-        let membersList = [];
-        let currentPage = 1;
-        const pageSize = 10;
-        let filteredSavings = [];
-        let currentUser = null;
-        let searchQuery = '';
-        let filterYear = 'all';
-        let searchSetupDone = false;
-        let editSearchSetupDone = false;
-
-        // ---- Load customers ----
         async function loadMembersForSelect() {
             try {
                 const snapshot = await db.collection('members').get();
@@ -1854,10 +1838,12 @@
             }
         }
 
-        // ---- Main customer search ----
-        function setupMemberSearch() {
-            if (searchSetupDone) return;
-            searchSetupDone = true;
+        let mainSearchSetup = false;
+        let editSearchSetup = false;
+
+        function setupMainMemberSearch() {
+            if (mainSearchSetup) return;
+            mainSearchSetup = true;
             const searchInput = document.getElementById('memberSearch');
             const hiddenId = document.getElementById('memberId');
             const suggestions = document.getElementById('memberSuggestions');
@@ -1870,7 +1856,8 @@
                     return;
                 }
                 if (membersList.length === 0) {
-                    suggestions.innerHTML = `<div style="color:var(--text-secondary); padding:10px;">No customers loaded. Click "Reload Customers".</div>`;
+                    suggestions.innerHTML =
+                        `<div style="color:var(--text-secondary); padding:10px;">No customers loaded. Click "Reload Customers".</div>`;
                     suggestions.style.display = 'block';
                     return;
                 }
@@ -1879,14 +1866,15 @@
                     (m.memberId && m.memberId.toLowerCase().includes(query))
                 );
                 if (filtered.length === 0) {
-                    suggestions.innerHTML = `<div style="color:var(--text-secondary); padding:10px;">No matching customers.</div>`;
+                    suggestions.innerHTML =
+                        `<div style="color:var(--text-secondary); padding:10px;">No matching customers.</div>`;
                     suggestions.style.display = 'block';
                     return;
                 }
                 let html = '';
                 filtered.forEach(m => {
                     const displayText = m.fullName + (m.memberId ? ` (${m.memberId})` : '');
-                    html += `<div onclick="selectMember('${m.id}', '${displayText}')">
+                    html += `<div onclick="selectMainMember('${m.id}', '${displayText}')">
                                 ${displayText}
                             </div>`;
                 });
@@ -1907,7 +1895,7 @@
                     let html = '';
                     membersList.forEach(m => {
                         const displayText = m.fullName + (m.memberId ? ` (${m.memberId})` : '');
-                        html += `<div onclick="selectMember('${m.id}', '${displayText}')">
+                        html += `<div onclick="selectMainMember('${m.id}', '${displayText}')">
                                     ${displayText}
                                 </div>`;
                     });
@@ -1930,23 +1918,24 @@
             }
         }
 
-        function selectMember(id, displayName) {
+        function selectMainMember(id, displayName) {
             document.getElementById('memberSearch').value = displayName;
             document.getElementById('memberId').value = id;
             document.getElementById('memberSuggestions').style.display = 'none';
         }
 
-        // ---- Edit customer search ----
         function setupEditMemberSearch() {
-            if (editSearchSetupDone) return;
-            editSearchSetupDone = true;
+            if (editSearchSetup) return;
+            editSearchSetup = true;
             const searchInput = document.getElementById('editMemberSearch');
+            const hiddenId = document.getElementById('editMemberId');
             const suggestions = document.getElementById('editMemberSuggestions');
 
             searchInput.addEventListener('input', function() {
                 const query = this.value.toLowerCase().trim();
                 if (!query) {
                     suggestions.style.display = 'none';
+                    hiddenId.value = '';
                     return;
                 }
                 const filtered = membersList.filter(m =>
@@ -1978,7 +1967,97 @@
             document.getElementById('editMemberSuggestions').style.display = 'none';
         }
 
-        // ===== POPULATE YEAR FILTER =====
+        // ============================================================
+        // SAVINGS MODULE
+        // ============================================================
+        let allSavings = [];
+        let currentPage = 1;
+        const pageSize = 10;
+        let filteredSavings = [];
+        let currentUser = null;
+        let searchQuery = '';
+        let filterYear = 'all';
+
+        // ---- Conditional fields toggle ----
+        function toggleConditionalFields() {
+            const type = document.getElementById('savingsType')?.value;
+            const fields = document.getElementById('conditionalFields');
+            const ttRequired = document.getElementById('ttRequired');
+            const transferDateRequired = document.getElementById('transferDateRequired');
+            const bankRequired = document.getElementById('bankRequired');
+            const ttInput = document.getElementById('ttNumber');
+            const transferDateInput = document.getElementById('transferDate');
+            const bankInput = document.getElementById('bankName');
+
+            if (!fields || !ttInput || !transferDateInput || !bankInput) return;
+
+            if (type === 'cash') {
+                fields.style.display = 'none';
+                ttInput.removeAttribute('required');
+                transferDateInput.removeAttribute('required');
+                bankInput.removeAttribute('required');
+                if (ttRequired) ttRequired.textContent = '';
+                if (transferDateRequired) transferDateRequired.textContent = '';
+                if (bankRequired) bankRequired.textContent = '';
+            } else if (type === 'mobile') {
+                fields.style.display = 'block';
+                ttInput.setAttribute('required', 'required');
+                transferDateInput.setAttribute('required', 'required');
+                bankInput.removeAttribute('required');
+                if (ttRequired) ttRequired.textContent = '*';
+                if (transferDateRequired) transferDateRequired.textContent = '*';
+                if (bankRequired) bankRequired.textContent = '';
+            } else if (type === 'bank') {
+                fields.style.display = 'block';
+                ttInput.setAttribute('required', 'required');
+                transferDateInput.setAttribute('required', 'required');
+                bankInput.setAttribute('required', 'required');
+                if (ttRequired) ttRequired.textContent = '*';
+                if (transferDateRequired) transferDateRequired.textContent = '*';
+                if (bankRequired) bankRequired.textContent = '*';
+            }
+        }
+
+        function toggleEditConditionalFields() {
+            const type = document.getElementById('editSavingsType')?.value;
+            const fields = document.getElementById('editConditionalFields');
+            const ttRequired = document.getElementById('editTtRequired');
+            const transferDateRequired = document.getElementById('editTransferDateRequired');
+            const bankRequired = document.getElementById('editBankRequired');
+            const ttInput = document.getElementById('editTtNumber');
+            const transferDateInput = document.getElementById('editTransferDate');
+            const bankInput = document.getElementById('editBankName');
+
+            if (!fields || !ttInput || !transferDateInput || !bankInput) return;
+
+            if (type === 'cash') {
+                fields.style.display = 'none';
+                ttInput.removeAttribute('required');
+                transferDateInput.removeAttribute('required');
+                bankInput.removeAttribute('required');
+                if (ttRequired) ttRequired.textContent = '';
+                if (transferDateRequired) transferDateRequired.textContent = '';
+                if (bankRequired) bankRequired.textContent = '';
+            } else if (type === 'mobile') {
+                fields.style.display = 'block';
+                ttInput.setAttribute('required', 'required');
+                transferDateInput.setAttribute('required', 'required');
+                bankInput.removeAttribute('required');
+                if (ttRequired) ttRequired.textContent = '*';
+                if (transferDateRequired) transferDateRequired.textContent = '*';
+                if (bankRequired) bankRequired.textContent = '';
+            } else if (type === 'bank') {
+                fields.style.display = 'block';
+                ttInput.setAttribute('required', 'required');
+                transferDateInput.setAttribute('required', 'required');
+                bankInput.setAttribute('required', 'required');
+                if (ttRequired) ttRequired.textContent = '*';
+                if (transferDateRequired) transferDateRequired.textContent = '*';
+                if (bankRequired) bankRequired.textContent = '*';
+            }
+        }
+
+        // ---- Populate Year Filter ----
         function populateYearFilter() {
             const yearFilter = document.getElementById('yearFilter');
             const years = new Set();
@@ -2010,6 +2089,7 @@
             filterYear = yearFilter.value;
         }
 
+        // ---- Load Savings ----
         async function loadSavings() {
             try {
                 console.log('Loading savings data...');
@@ -2234,86 +2314,8 @@
             document.getElementById('totalCount').textContent = total.toLocaleString();
         }
 
-        function toggleConditionalFields() {
-            const type = document.getElementById('savingsType')?.value;
-            const fields = document.getElementById('conditionalFields');
-            const ttRequired = document.getElementById('ttRequired');
-            const transferDateRequired = document.getElementById('transferDateRequired');
-            const bankRequired = document.getElementById('bankRequired');
-            const ttInput = document.getElementById('ttNumber');
-            const transferDateInput = document.getElementById('transferDate');
-            const bankInput = document.getElementById('bankName');
-
-            if (!fields || !ttInput || !transferDateInput || !bankInput) return;
-
-            if (type === 'cash') {
-                fields.style.display = 'none';
-                ttInput.removeAttribute('required');
-                transferDateInput.removeAttribute('required');
-                bankInput.removeAttribute('required');
-                if (ttRequired) ttRequired.textContent = '';
-                if (transferDateRequired) transferDateRequired.textContent = '';
-                if (bankRequired) bankRequired.textContent = '';
-            } else if (type === 'mobile') {
-                fields.style.display = 'block';
-                ttInput.setAttribute('required', 'required');
-                transferDateInput.setAttribute('required', 'required');
-                bankInput.removeAttribute('required');
-                if (ttRequired) ttRequired.textContent = '*';
-                if (transferDateRequired) transferDateRequired.textContent = '*';
-                if (bankRequired) bankRequired.textContent = '';
-            } else if (type === 'bank') {
-                fields.style.display = 'block';
-                ttInput.setAttribute('required', 'required');
-                transferDateInput.setAttribute('required', 'required');
-                bankInput.setAttribute('required', 'required');
-                if (ttRequired) ttRequired.textContent = '*';
-                if (transferDateRequired) transferDateRequired.textContent = '*';
-                if (bankRequired) bankRequired.textContent = '*';
-            }
-        }
-
-        function toggleEditConditionalFields() {
-            const type = document.getElementById('editSavingsType')?.value;
-            const fields = document.getElementById('editConditionalFields');
-            const ttRequired = document.getElementById('editTtRequired');
-            const transferDateRequired = document.getElementById('editTransferDateRequired');
-            const bankRequired = document.getElementById('editBankRequired');
-            const ttInput = document.getElementById('editTtNumber');
-            const transferDateInput = document.getElementById('editTransferDate');
-            const bankInput = document.getElementById('editBankName');
-
-            if (!fields || !ttInput || !transferDateInput || !bankInput) return;
-
-            if (type === 'cash') {
-                fields.style.display = 'none';
-                ttInput.removeAttribute('required');
-                transferDateInput.removeAttribute('required');
-                bankInput.removeAttribute('required');
-                if (ttRequired) ttRequired.textContent = '';
-                if (transferDateRequired) transferDateRequired.textContent = '';
-                if (bankRequired) bankRequired.textContent = '';
-            } else if (type === 'mobile') {
-                fields.style.display = 'block';
-                ttInput.setAttribute('required', 'required');
-                transferDateInput.setAttribute('required', 'required');
-                bankInput.removeAttribute('required');
-                if (ttRequired) ttRequired.textContent = '*';
-                if (transferDateRequired) transferDateRequired.textContent = '*';
-                if (bankRequired) bankRequired.textContent = '';
-            } else if (type === 'bank') {
-                fields.style.display = 'block';
-                ttInput.setAttribute('required', 'required');
-                transferDateInput.setAttribute('required', 'required');
-                bankInput.setAttribute('required', 'required');
-                if (ttRequired) ttRequired.textContent = '*';
-                if (transferDateRequired) transferDateRequired.textContent = '*';
-                if (bankRequired) bankRequired.textContent = '*';
-            }
-        }
-
         // ============================================================
-        // SAVE DEPOSIT (with audit logging) - DUPLICATE CHECK FIXED
+        // SAVE DEPOSIT (with audit logging) - UPDATED DUPLICATE CHECK
         // ============================================================
         async function saveDeposit(e) {
             e.preventDefault();
@@ -2348,26 +2350,33 @@
                 if (savingsType === 'bank' && !bankName) { showToast('Please enter the bank name.', 'warning'); return; }
             }
 
-            // DUPLICATE CHECK – same customer only
+            // ---- DUPLICATE CHECK (same customer, cross-collection, UTC date) ----
             if (savingsType !== 'cash' && ttNumber && transferDate) {
                 try {
-                    const startOfDay = new Date(transferDate);
-                    startOfDay.setHours(0, 0, 0, 0);
-                    const endOfDay = new Date(transferDate);
-                    endOfDay.setHours(23, 59, 59, 999);
+                    const parts = transferDate.split('-').map(Number);
+                    const start = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2], 0, 0, 0));
+                    const end = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2], 23, 59, 59, 999));
+
+                    console.log('🔍 [SAVINGS CREATE] Checking duplicates:', { memberId, ttNumber, start: start
+                            .toISOString(), end: end.toISOString() });
 
                     const dupSnap = await db.collection('transactions')
-                        .where('type', '==', 'savings')
-                        .where('memberId', '==', memberId)      // ✅ Same customer only
+                        .where('memberId', '==', memberId)
                         .where('ttNumber', '==', ttNumber)
-                        .where('transferDate', '>=', startOfDay)
-                        .where('transferDate', '<=', endOfDay)
+                        .where('transferDate', '>=', start)
+                        .where('transferDate', '<=', end)
+                        .where('type', 'in', ['savings', 'profit_income', 'repayment'])
                         .get();
 
+                    console.log('📦 [SAVINGS CREATE] Found:', dupSnap.size, 'documents');
+
                     if (!dupSnap.empty) {
+                        console.warn('🚫 [SAVINGS CREATE] Blocking due to:', dupSnap.docs.map(d => ({ id: d.id, type: d.data()
+                                .type })));
                         showToast(translations[currentLang].duplicateTT, 'warning');
                         return;
                     }
+                    console.log('✅ [SAVINGS CREATE] No duplicates, proceeding.');
                 } catch (error) {
                     console.error('Duplicate check error:', error);
                     showToast('Error checking duplicates. Please try again.', 'error');
@@ -2441,7 +2450,7 @@
         }
 
         // ============================================================
-        // EDIT SAVINGS (with audit logging) - DUPLICATE CHECK FIXED
+        // EDIT SAVINGS (with audit logging) - UPDATED DUPLICATE CHECK
         // ============================================================
         function editSavings(txId) {
             if (!canEditSavings()) {
@@ -2517,28 +2526,35 @@
                 if (savingsType === 'bank' && !bankName) { showToast('Please enter the bank name.', 'warning'); return; }
             }
 
-            // DUPLICATE CHECK – same customer, exclude current doc
+            // ---- DUPLICATE CHECK (same customer, cross-collection, UTC date, exclude current) ----
             if (savingsType !== 'cash' && ttNumber && transferDate) {
                 try {
-                    const startOfDay = new Date(transferDate);
-                    startOfDay.setHours(0, 0, 0, 0);
-                    const endOfDay = new Date(transferDate);
-                    endOfDay.setHours(23, 59, 59, 999);
+                    const parts = transferDate.split('-').map(Number);
+                    const start = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2], 0, 0, 0));
+                    const end = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2], 23, 59, 59, 999));
+
+                    console.log('🔍 [SAVINGS EDIT] Checking duplicates:', { memberId, ttNumber, txId, start: start
+                            .toISOString(), end: end.toISOString() });
 
                     const dupSnap = await db.collection('transactions')
-                        .where('type', '==', 'savings')
-                        .where('memberId', '==', memberId)      // ✅ Same customer only
+                        .where('memberId', '==', memberId)
                         .where('ttNumber', '==', ttNumber)
-                        .where('transferDate', '>=', startOfDay)
-                        .where('transferDate', '<=', endOfDay)
+                        .where('transferDate', '>=', start)
+                        .where('transferDate', '<=', end)
+                        .where('type', 'in', ['savings', 'profit_income', 'repayment'])
                         .get();
+
+                    console.log('📦 [SAVINGS EDIT] Found:', dupSnap.size, 'documents');
 
                     // Exclude the current document being edited
                     const hasDuplicate = dupSnap.docs.some(doc => doc.id !== txId);
                     if (hasDuplicate) {
+                        console.warn('🚫 [SAVINGS EDIT] Blocking due to:', dupSnap.docs.filter(d => d.id !== txId).map(d =>
+                        ({ id: d.id, type: d.data().type })));
                         showToast(translations[currentLang].duplicateTT, 'warning');
                         return;
                     }
+                    console.log('✅ [SAVINGS EDIT] No conflicting duplicates.');
                 } catch (error) {
                     console.error('Duplicate check error:', error);
                     showToast('Error checking duplicates. Please try again.', 'error');
@@ -2793,8 +2809,8 @@
                 document.querySelectorAll('.lang-btn').forEach(btn => {
                     btn.addEventListener('click', function() {
                         setLanguage(this.dataset.lang);
-                        const currentItems = filteredSavings.slice((currentPage - 1) * pageSize, currentPage *
-                            pageSize);
+                        const currentItems = filteredSavings.slice((currentPage - 1) * pageSize,
+                            currentPage * pageSize);
                         renderTable(currentItems);
                         updatePaginationInfo();
                         renderPageButtons();
@@ -2812,7 +2828,7 @@
                 });
 
                 await loadMembersForSelect();
-                setupMemberSearch();
+                setupMainMemberSearch();
                 setupEditMemberSearch();
 
                 document.getElementById('dateInput').value = new Date().toISOString().split('T')[0];
@@ -2864,7 +2880,7 @@
                 window.deleteSavings = deleteSavings;
                 window.goToPage = goToPage;
                 window.toggleSidebar = toggleSidebar;
-                window.selectMember = selectMember;
+                window.selectMainMember = selectMainMember;
                 window.selectEditMember = selectEditMember;
                 window.toggleConditionalFields = toggleConditionalFields;
                 window.toggleEditConditionalFields = toggleEditConditionalFields;
