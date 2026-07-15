@@ -409,7 +409,7 @@
             background: #c0392b;
         }
 
-        /* ----- FORM SECTION (with conditional fields) ----- */
+        /* ----- FORM SECTION (with conditional fields & member search) ----- */
         .form-section {
             background: var(--bg-card);
             border-radius: 16px;
@@ -472,6 +472,71 @@
             justify-content: flex-end;
             gap: 12px;
             margin-top: 6px;
+        }
+
+        /* ----- CUSTOMER SUGGESTIONS (same as savings) ----- */
+        #memberSuggestions {
+            position: absolute;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 10;
+            width: 100%;
+            box-shadow: var(--shadow-md);
+            top: 100%;
+            left: 0;
+        }
+        #memberSuggestions div {
+            padding: 10px 14px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+        #memberSuggestions div:hover {
+            background: var(--bg-primary);
+        }
+        #memberSuggestions div:last-child {
+            border-bottom: none;
+        }
+        #editMemberSuggestions {
+            position: absolute;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 10;
+            width: 100%;
+            box-shadow: var(--shadow-md);
+            top: 100%;
+            left: 0;
+        }
+        #editMemberSuggestions div {
+            padding: 10px 14px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+        #editMemberSuggestions div:hover {
+            background: var(--bg-primary);
+        }
+        #editMemberSuggestions div:last-child {
+            border-bottom: none;
+        }
+        .reload-btn {
+            font-size: 12px;
+            padding: 4px 12px;
+            margin-left: 8px;
+            background: var(--border-color);
+            border: 1px solid var(--input-border);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .reload-btn:hover {
+            background: var(--input-border);
         }
 
         /* ----- CONDITIONAL FIELDS (TT Number, Transfer Date, Bank Name) ----- */
@@ -965,7 +1030,7 @@
         }
 
         /* ============================================================
-           EDIT DEPOSIT MODAL
+           EDIT DEPOSIT MODAL (with customer field added)
            ============================================================ */
         .modal-overlay {
             display: none;
@@ -1152,11 +1217,9 @@
                 <li><a href="withdrawals.html"><i class="fas fa-money-bill-wave"></i> <span data-i18n="navWithdrawals">Withdrawals</span></a></li>
                 <li><a href="dividends.html"><i class="fas fa-gift"></i> <span data-i18n="navDividends">Dividends</span></a></li>
                 <li><a href="reports.html"><i class="fas fa-chart-bar"></i> <span data-i18n="navReports">Reports</span></a></li>
-                <!-- ===== AUDIT TRAIL LINK ===== -->
                 <li id="auditNavItem" style="display:none;">
                     <a href="audit.html"><i class="fas fa-clipboard-list"></i> <span data-i18n="navAudit">Audit Trail</span></a>
                 </li>
-                <!-- ===== END AUDIT TRAIL ===== -->
                 <li id="usersNavItem" style="display:none;"><a href="users.html"><i class="fas fa-user-cog"></i> <span data-i18n="navUsers">Users</span></a></li>
                 <li><a href="settings.html"><i class="fas fa-cog"></i> <span data-i18n="navSettings">Settings</span></a></li>
             </ul>
@@ -1201,7 +1264,6 @@
                 </div>
             </div>
 
-            <!-- Deposit Balance Card -->
             <div class="deposit-balance-card">
                 <div>
                     <div class="balance-label" data-i18n="totalDeposits">Total Deposits (Profit Income)</div>
@@ -1212,11 +1274,22 @@
                 </div>
             </div>
 
-            <!-- Record Deposit Form – role-based visibility -->
+            <!-- Record Deposit Form -->
             <div class="form-section" id="depositFormSection">
                 <h3 data-i18n="recordDeposit">Record Deposit</h3>
                 <form id="depositForm">
                     <div class="form-row">
+                        <!-- Customer Selection -->
+                        <div class="form-group">
+                            <label data-i18n="customer">Customer <span class="required">*</span>
+                                <button type="button" class="reload-btn" id="reloadMembersBtn">
+                                    <i class="fas fa-sync-alt"></i> Reload Customers
+                                </button>
+                            </label>
+                            <input type="text" id="memberSearch" placeholder="Search customer by name..." autocomplete="off" required />
+                            <input type="hidden" id="memberId" />
+                            <div id="memberSuggestions"></div>
+                        </div>
                         <div class="form-group">
                             <label data-i18n="incomeType">Income Type <span class="required">*</span></label>
                             <select id="incomeType" required>
@@ -1244,7 +1317,7 @@
                         </div>
                     </div>
 
-                    <!-- Conditional Fields: TT Number, Transfer Date, Bank Name -->
+                    <!-- Conditional Fields -->
                     <div class="conditional-fields" id="conditionalFields">
                         <div class="form-row two">
                             <div class="form-group">
@@ -1287,7 +1360,6 @@
                 </div>
             </div>
 
-            <!-- SEARCH & YEAR FILTER -->
             <div class="search-bar">
                 <div class="search-wrapper">
                     <i class="fas fa-search"></i>
@@ -1359,6 +1431,12 @@
                 <input type="hidden" id="editDepositId" />
                 <div class="form-row">
                     <div class="form-group">
+                        <label data-i18n="customer">Customer <span class="required">*</span></label>
+                        <input type="text" id="editMemberSearch" placeholder="Search customer..." autocomplete="off" required />
+                        <input type="hidden" id="editMemberId" />
+                        <div id="editMemberSuggestions"></div>
+                    </div>
+                    <div class="form-group">
                         <label data-i18n="incomeType">Income Type <span class="required">*</span></label>
                         <select id="editIncomeType" required>
                             <option value="Registration Fee">Registration Fee</option>
@@ -1423,7 +1501,7 @@
 
     <script>
         // ============================================================
-        // FIREBASE CONFIG (CABO MEREGA SACCO)
+        // FIREBASE CONFIG
         // ============================================================
         const firebaseConfig = {
             apiKey: "AIzaSyDMOmNeEelM8kk5MwMN67tIiuLEYwWiYWo",
@@ -1505,13 +1583,14 @@
                 printRecorded: 'Print recorded successfully.',
                 unauthorized: 'You are not authorized to perform this action.',
                 amountInWords: 'Amount in words',
-                duplicateTT: 'This TT number and Transfer Date are already registered. Please check and try again.',
+                duplicateTT: 'This customer already has a Savings, Deposit, or Repayment record with this TT number and Transfer Date. Please check.',
                 allYears: 'All Years',
                 selectYear: 'Select Year',
                 editDeposit: 'Edit Deposit',
                 updateDeposit: 'Update Deposit',
                 cancel: 'Cancel',
-                depositUpdated: 'Deposit updated successfully!'
+                depositUpdated: 'Deposit updated successfully!',
+                customer: 'Customer'
             },
             am: {
                 brandSub: 'ሳኮ ባንክ',
@@ -1574,13 +1653,14 @@
                 printRecorded: 'ህትመት በተሳካ ሁኔታ ተመዝግቧል።',
                 unauthorized: 'ይህን ተግባር ለማከናወን ፈቃድ የለዎትም።',
                 amountInWords: 'በቃላት መጠን',
-                duplicateTT: 'ይህ ቲቲ ቁጥር እና የዝውውር ቀን ቀድሞ ተመዝግቧል። እባክዎ ይፈትሹ እና እንደገና ይሞክሩ።',
+                duplicateTT: 'ይህ ደንበኛ ቀድሞ በቁጠባ፣ ተቀማጭ ወይም ክፍያ ላይ ይህን ቲቲ ቁጥር እና የዝውውር ቀን ያለው መዝገብ አለው። እባክዎ ይፈትሹ።',
                 allYears: 'ሁሉም ዓመታት',
                 selectYear: 'ዓመት ይምረጡ',
                 editDeposit: 'ተቀማጭ ያስተካክሉ',
                 updateDeposit: 'ተቀማጭ ያሻሽሉ',
                 cancel: 'ሰርዝ',
-                depositUpdated: 'ተቀማጭ በተሳካ ሁኔታ ተሻሽሏል!'
+                depositUpdated: 'ተቀማጭ በተሳካ ሁኔታ ተሻሽሏል!',
+                customer: 'ደንበኛ'
             },
             om: {
                 brandSub: 'Sirna Baankii',
@@ -1643,19 +1723,21 @@
                 printRecorded: 'Maxxansi sirriitti galmeefame.',
                 unauthorized: 'Gochaa kana raawwachuuf hayyamamtee hin jirtu.',
                 amountInWords: 'Qaba jechootaan',
-                duplicateTT: 'Lakkoofsi TT fi guyyaan sochoosaa kun duraan galmeefame. Mirkaneessii deebi’i.',
+                duplicateTT: 'Meeshaan kun duraan kussaa, kuusaa, ykn kaffaltii keessatti lakkoofsa TT fi guyyaa sochoosaa kanaan galmee qaba. Mirkaneessii deebi’i.',
                 allYears: 'Waggaa Hunda',
                 selectYear: 'Waggaa Filadhu',
                 editDeposit: 'Kuusaa Jijjiiri',
                 updateDeposit: 'Kuusaa Fooyyessi',
                 cancel: 'Haqi',
-                depositUpdated: 'Kuusaan sirriitti fooyyeffame!'
+                depositUpdated: 'Kuusaan sirriitti fooyyeffame!',
+                customer: 'Meeshaa'
             }
         };
 
         let currentLang = 'en';
         let currentUserRole = 'viewer';
         let currentUserDisplayName = 'Admin';
+        let membersList = [];
 
         function setLanguage(lang) {
             if (!translations[lang]) return;
@@ -1688,16 +1770,13 @@
         }
 
         // ============================================================
-        // SIDEBAR TOGGLE
+        // HELPERS
         // ============================================================
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('open');
             document.getElementById('sidebarOverlay').classList.toggle('active');
         }
 
-        // ============================================================
-        // TOAST
-        // ============================================================
         function showToast(message, type = 'success') {
             let container = document.getElementById('toast-container');
             if (!container) {
@@ -1723,50 +1802,32 @@
             }, 4500);
         }
 
-        // ============================================================
-        // ROLE PERMISSIONS
-        // ============================================================
-        function canAddDeposit() {
-            return ['admin', 'manager', 'teller'].includes(currentUserRole);
-        }
+        function canAddDeposit() { return ['admin', 'manager', 'teller'].includes(currentUserRole); }
+        function canEditDeposit() { return ['admin', 'manager'].includes(currentUserRole); }
+        function canDeleteDeposit() { return ['admin'].includes(currentUserRole); }
 
-        function canEditDeposit() {
-            return ['admin', 'manager'].includes(currentUserRole);
-        }
-
-        function canDeleteDeposit() {
-            return ['admin'].includes(currentUserRole);
-        }
-
-        // ============================================================
-        // AUDIT LOGGING (added for audit trail)
-        // ============================================================
         async function logAudit(action, collection, documentId, changes = {}, details = '') {
             try {
                 const user = auth.currentUser;
                 const userEmail = user?.email || 'system';
                 const userName = user?.displayName || user?.email || 'System';
                 const userDisplayName = user?.displayName || 'System';
-
                 await db.collection('audit').add({
-                    action: action,
-                    collection: collection,
-                    documentId: documentId,
-                    changes: changes,
+                    action,
+                    collection,
+                    documentId,
+                    changes,
                     details: details || `${action} ${collection} document ${documentId}`,
                     timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    userEmail: userEmail,
-                    userName: userName,
-                    userDisplayName: userDisplayName
+                    userEmail,
+                    userName,
+                    userDisplayName
                 });
             } catch (error) {
                 console.error('Error writing to audit log:', error);
             }
         }
 
-        // ============================================================
-        // NUMBER TO WORDS (English)
-        // ============================================================
         function numberToWords(num) {
             if (num === 0) return 'Zero';
             const units = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
@@ -1811,6 +1872,157 @@
         }
 
         // ============================================================
+        // CUSTOMER SEARCH
+        // ============================================================
+        async function loadMembersForSelect() {
+            try {
+                const snapshot = await db.collection('members').get();
+                membersList = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    membersList.push({
+                        id: doc.id,
+                        fullName: data.fullName,
+                        memberId: data.memberId,
+                    });
+                });
+                return true;
+            } catch (error) {
+                showToast(translations[currentLang].loadError + error.message, 'error');
+                return false;
+            }
+        }
+
+        let mainSearchSetup = false;
+        let editSearchSetup = false;
+
+        function setupMainMemberSearch() {
+            if (mainSearchSetup) return;
+            mainSearchSetup = true;
+            const searchInput = document.getElementById('memberSearch');
+            const hiddenId = document.getElementById('memberId');
+            const suggestions = document.getElementById('memberSuggestions');
+
+            searchInput.addEventListener('input', function() {
+                const query = this.value.toLowerCase().trim();
+                if (!query) {
+                    suggestions.style.display = 'none';
+                    hiddenId.value = '';
+                    return;
+                }
+                if (membersList.length === 0) {
+                    suggestions.innerHTML =
+                        `<div style="color:var(--text-secondary); padding:10px;">No customers loaded. Click "Reload Customers".</div>`;
+                    suggestions.style.display = 'block';
+                    return;
+                }
+                const filtered = membersList.filter(m =>
+                    (m.fullName && m.fullName.toLowerCase().includes(query)) ||
+                    (m.memberId && m.memberId.toLowerCase().includes(query))
+                );
+                if (filtered.length === 0) {
+                    suggestions.innerHTML =
+                        `<div style="color:var(--text-secondary); padding:10px;">No matching customers.</div>`;
+                    suggestions.style.display = 'block';
+                    return;
+                }
+                let html = '';
+                filtered.forEach(m => {
+                    const displayText = m.fullName + (m.memberId ? ` (${m.memberId})` : '');
+                    html += `<div onclick="selectMainMember('${m.id}', '${displayText}')">
+                                ${displayText}
+                            </div>`;
+                });
+                suggestions.innerHTML = html;
+                suggestions.style.display = 'block';
+            });
+
+            searchInput.addEventListener('focus', function() {
+                if (membersList.length === 0) {
+                    showToast('Loading customers...', 'warning');
+                    loadMembersForSelect().then(() => {
+                        if (membersList.length > 0) {
+                            showToast(`✅ ${membersList.length} customers loaded.`, 'success');
+                            searchInput.dispatchEvent(new Event('input'));
+                        }
+                    });
+                } else if (!this.value.trim()) {
+                    let html = '';
+                    membersList.forEach(m => {
+                        const displayText = m.fullName + (m.memberId ? ` (${m.memberId})` : '');
+                        html += `<div onclick="selectMainMember('${m.id}', '${displayText}')">
+                                    ${displayText}
+                                </div>`;
+                    });
+                    suggestions.innerHTML = html;
+                    suggestions.style.display = 'block';
+                }
+            });
+
+            searchInput.addEventListener('blur', function() {
+                setTimeout(() => { suggestions.style.display = 'none'; }, 200);
+            });
+
+            const reloadBtn = document.getElementById('reloadMembersBtn');
+            if (reloadBtn) {
+                reloadBtn.addEventListener('click', async function() {
+                    showToast('Reloading customers...', 'warning');
+                    await loadMembersForSelect();
+                    document.getElementById('memberSearch').focus();
+                });
+            }
+        }
+
+        function selectMainMember(id, displayName) {
+            document.getElementById('memberSearch').value = displayName;
+            document.getElementById('memberId').value = id;
+            document.getElementById('memberSuggestions').style.display = 'none';
+        }
+
+        function setupEditMemberSearch() {
+            if (editSearchSetup) return;
+            editSearchSetup = true;
+            const searchInput = document.getElementById('editMemberSearch');
+            const hiddenId = document.getElementById('editMemberId');
+            const suggestions = document.getElementById('editMemberSuggestions');
+
+            searchInput.addEventListener('input', function() {
+                const query = this.value.toLowerCase().trim();
+                if (!query) {
+                    suggestions.style.display = 'none';
+                    hiddenId.value = '';
+                    return;
+                }
+                const filtered = membersList.filter(m =>
+                    (m.fullName && m.fullName.toLowerCase().includes(query)) ||
+                    (m.memberId && m.memberId.toLowerCase().includes(query))
+                );
+                if (filtered.length === 0) {
+                    suggestions.style.display = 'none';
+                    return;
+                }
+                let html = '';
+                filtered.forEach(m => {
+                    html += `<div onclick="selectEditMember('${m.id}', '${m.fullName} (${m.memberId||''})')">
+                                ${m.fullName} <span style="color:var(--text-secondary);font-size:12px;">${m.memberId||''}</span>
+                            </div>`;
+                });
+                suggestions.innerHTML = html;
+                suggestions.style.display = 'block';
+            });
+
+            searchInput.addEventListener('blur', function() {
+                setTimeout(() => { suggestions.style.display = 'none'; }, 200);
+            });
+        }
+
+        function selectEditMember(id, displayName) {
+            document.getElementById('editMemberSearch').value = displayName;
+            document.getElementById('editMemberId').value = id;
+            document.getElementById('editMemberSuggestions').style.display = 'none';
+        }
+
+        // ============================================================
         // DEPOSITS MODULE
         // ============================================================
         let allDeposits = [];
@@ -1821,7 +2033,6 @@
         let searchQuery = '';
         let filterYear = 'all';
 
-        // ---- Conditional fields toggle (main form) ----
         function toggleConditionalFields() {
             const method = document.getElementById('paymentMethod')?.value;
             const fields = document.getElementById('conditionalFields');
@@ -1858,7 +2069,6 @@
             }
         }
 
-        // ---- Conditional fields toggle (edit form) ----
         function toggleEditConditionalFields() {
             const method = document.getElementById('editPaymentMethod')?.value;
             const fields = document.getElementById('editConditionalFields');
@@ -1895,7 +2105,6 @@
             }
         }
 
-        // ---- Populate Year Filter ----
         function populateYearFilter() {
             const yearFilter = document.getElementById('yearFilter');
             const years = new Set();
@@ -1927,7 +2136,6 @@
             filterYear = yearFilter.value;
         }
 
-        // ---- Get total deposits ----
         async function getTotalDeposits() {
             try {
                 const snapshot = await db.collection('transactions')
@@ -1946,7 +2154,6 @@
             }
         }
 
-        // ---- Load deposits ----
         async function loadDeposits() {
             try {
                 const snapshot = await db.collection('transactions')
@@ -1973,14 +2180,12 @@
             }
         }
 
-        // ---- Apply search + year filter ----
         function applySearch() {
             searchQuery = document.getElementById('searchInput').value.toLowerCase().trim();
             filterYear = document.getElementById('yearFilter').value;
 
             let filtered = [...allDeposits];
 
-            // Text search
             if (searchQuery) {
                 filtered = filtered.filter(d =>
                     (d.incomeType && d.incomeType.toLowerCase().includes(searchQuery)) ||
@@ -1991,7 +2196,6 @@
                 );
             }
 
-            // Year filter
             if (filterYear !== 'all') {
                 const yearNum = Number(filterYear);
                 filtered = filtered.filter(d => {
@@ -2019,7 +2223,8 @@
             const t = translations[currentLang];
 
             if (!items || items.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:40px; color:var(--text-secondary);">${t.noDeposits}</td></tr>`;
+                tbody.innerHTML =
+                    `<tr><td colspan="9" style="text-align:center; padding:40px; color:var(--text-secondary);">${t.noDeposits}</td></tr>`;
                 return;
             }
 
@@ -2129,7 +2334,6 @@
             document.getElementById('totalCount').textContent = total.toLocaleString();
         }
 
-        // ---- View Deposit ----
         function viewDeposit(id) {
             const d = allDeposits.find(item => item.id === id);
             if (!d) return;
@@ -2153,7 +2357,6 @@
             );
         }
 
-        // ---- Edit Deposit (Admin/Manager only) ----
         function editDeposit(id) {
             if (!canEditDeposit()) {
                 showToast(translations[currentLang].unauthorized, 'error');
@@ -2165,6 +2368,15 @@
 
             const modal = document.getElementById('editDepositModal');
             document.getElementById('editDepositId').value = d.id;
+
+            const customer = membersList.find(m => m.id === d.memberId);
+            if (customer) {
+                document.getElementById('editMemberSearch').value = customer.fullName + ' (' + (customer.memberId || '') + ')';
+                document.getElementById('editMemberId').value = customer.id;
+            } else {
+                document.getElementById('editMemberSearch').value = '';
+                document.getElementById('editMemberId').value = '';
+            }
 
             document.getElementById('editIncomeType').value = d.incomeType || 'Other Deposit';
             document.getElementById('editAmount').value = d.amount || '';
@@ -2185,13 +2397,12 @@
             modal.style.display = 'flex';
         }
 
-        // ---- Close Edit Modal ----
         function closeEditModal() {
             document.getElementById('editDepositModal').classList.remove('active');
             document.getElementById('editDepositModal').style.display = 'none';
         }
 
-        // ---- Update Deposit (with audit logging) ----
+        // --- UPDATE DEPOSIT (with duplicate check) ---
         async function updateDeposit(e) {
             e.preventDefault();
             if (!canEditDeposit()) {
@@ -2200,6 +2411,7 @@
             }
 
             const depositId = document.getElementById('editDepositId').value;
+            const memberId = document.getElementById('editMemberId').value;
             const incomeType = document.getElementById('editIncomeType').value;
             const amount = parseFloat(document.getElementById('editAmount').value);
             const date = document.getElementById('editDate').value;
@@ -2209,6 +2421,7 @@
             const bankName = document.getElementById('editBankName').value.trim();
             const description = document.getElementById('editDescription').value.trim();
 
+            if (!memberId) { showToast('Please select a customer.', 'warning'); return; }
             if (!amount || amount <= 0) { showToast('Please enter a valid amount.', 'warning'); return; }
             if (!date) { showToast('Please select a date.', 'warning'); return; }
 
@@ -2216,6 +2429,35 @@
                 if (!ttNumber) { showToast('Please enter the TT number.', 'warning'); return; }
                 if (!transferDate) { showToast('Please select the transfer date.', 'warning'); return; }
                 if (paymentMethod === 'bank' && !bankName) { showToast('Please enter the bank name.', 'warning'); return; }
+            }
+
+            // ---- DUPLICATE CHECK with UTC date range ----
+            if (paymentMethod !== 'cash' && ttNumber && transferDate) {
+                const parts = transferDate.split('-').map(Number);
+                const start = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2], 0, 0, 0));
+                const end = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2], 23, 59, 59, 999));
+
+                console.log('🔍 [EDIT] Checking duplicates for:', { memberId, ttNumber, start: start.toISOString(), end: end
+                        .toISOString() });
+
+                const dupSnap = await db.collection('transactions')
+                    .where('memberId', '==', memberId)
+                    .where('ttNumber', '==', ttNumber)
+                    .where('transferDate', '>=', start)
+                    .where('transferDate', '<=', end)
+                    .where('type', 'in', ['savings', 'profit_income', 'repayment'])
+                    .get();
+
+                console.log('📦 [EDIT] Query returned:', dupSnap.size, 'documents');
+
+                const hasDuplicate = dupSnap.docs.some(doc => doc.id !== depositId);
+                if (hasDuplicate) {
+                    const offenders = dupSnap.docs.filter(doc => doc.id !== depositId);
+                    console.warn('🚫 [EDIT] Blocking due to:', offenders.map(d => ({ id: d.id, type: d.data().type })));
+                    showToast(translations[currentLang].duplicateTT, 'warning');
+                    return;
+                }
+                console.log('✅ [EDIT] No conflicting duplicates found.');
             }
 
             const btn = document.getElementById('updateDepositBtn');
@@ -2229,14 +2471,15 @@
                 const oldData = oldDoc.exists ? oldDoc.data() : {};
 
                 const updateData = {
-                    incomeType: incomeType,
+                    memberId,
+                    incomeType,
                     amount: Math.round(amount * 100) / 100,
                     date: new Date(date),
-                    paymentMethod: paymentMethod,
+                    paymentMethod,
                     ttNumber: (paymentMethod === 'cash' ? '' : ttNumber),
                     bankName: (paymentMethod === 'cash' ? '' : bankName),
                     note: description,
-                    description: description,
+                    description,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
 
@@ -2249,8 +2492,8 @@
                 await docRef.update(updateData);
 
                 const changes = {};
-                const fieldsToCompare = ['incomeType', 'amount', 'date', 'paymentMethod', 'ttNumber', 'bankName',
-                    'description', 'note'
+                const fieldsToCompare = ['memberId', 'incomeType', 'amount', 'date', 'paymentMethod', 'ttNumber',
+                    'bankName', 'description', 'note'
                 ];
                 fieldsToCompare.forEach(field => {
                     const oldVal = oldData[field] !== undefined ? oldData[field] : null;
@@ -2275,7 +2518,7 @@
             }
         }
 
-        // ---- Delete Deposit (Admin only, with audit logging) ----
+        // --- DELETE DEPOSIT ---
         async function deleteDeposit(id) {
             if (!canDeleteDeposit()) {
                 showToast(translations[currentLang].unauthorized, 'error');
@@ -2302,7 +2545,7 @@
             }
         }
 
-        // ---- Record Deposit (with audit logging) ----
+        // --- RECORD DEPOSIT (with duplicate check) ---
         async function recordDeposit(e) {
             e.preventDefault();
             if (!canAddDeposit()) {
@@ -2310,6 +2553,7 @@
                 return;
             }
 
+            const memberId = document.getElementById('memberId').value;
             const incomeType = document.getElementById('incomeType').value;
             let amount = parseFloat(document.getElementById('amountInput').value);
             const date = document.getElementById('dateInput').value;
@@ -2319,6 +2563,7 @@
             const transferDate = document.getElementById('transferDate').value;
             const bankName = document.getElementById('bankName').value.trim();
 
+            if (!memberId) { showToast('Please select a customer.', 'warning'); return; }
             if (!incomeType) { showToast('Please select an income type.', 'warning'); return; }
             if (!amount || amount <= 0) { showToast('Please enter a valid amount.', 'warning'); return; }
             if (!date) { showToast('Please select a date.', 'warning'); return; }
@@ -2329,29 +2574,32 @@
                 if (paymentMethod === 'bank' && !bankName) { showToast('Please enter the bank name.', 'warning'); return; }
             }
 
+            // ---- DUPLICATE CHECK with UTC date range ----
             if (paymentMethod !== 'cash' && ttNumber && transferDate) {
-                try {
-                    const startOfDay = new Date(transferDate);
-                    startOfDay.setHours(0, 0, 0, 0);
-                    const endOfDay = new Date(transferDate);
-                    endOfDay.setHours(23, 59, 59, 999);
+                const parts = transferDate.split('-').map(Number);
+                const start = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2], 0, 0, 0));
+                const end = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2], 23, 59, 59, 999));
 
-                    const dupSnap = await db.collection('transactions')
-                        .where('type', '==', 'profit_income')
-                        .where('ttNumber', '==', ttNumber)
-                        .where('transferDate', '>=', startOfDay)
-                        .where('transferDate', '<=', endOfDay)
-                        .get();
+                console.log('🔍 [CREATE] Checking duplicates for:', { memberId, ttNumber, start: start.toISOString(), end: end
+                        .toISOString() });
 
-                    if (!dupSnap.empty) {
-                        showToast(translations[currentLang].duplicateTT, 'warning');
-                        return;
-                    }
-                } catch (error) {
-                    console.error('Duplicate check error:', error);
-                    showToast('Error checking duplicates. Please try again.', 'error');
+                const dupSnap = await db.collection('transactions')
+                    .where('memberId', '==', memberId)
+                    .where('ttNumber', '==', ttNumber)
+                    .where('transferDate', '>=', start)
+                    .where('transferDate', '<=', end)
+                    .where('type', 'in', ['savings', 'profit_income', 'repayment'])
+                    .get();
+
+                console.log('📦 [CREATE] Query returned:', dupSnap.size, 'documents');
+
+                if (!dupSnap.empty) {
+                    const offenders = dupSnap.docs.map(d => ({ id: d.id, type: d.data().type }));
+                    console.warn('🚫 [CREATE] Blocking due to:', offenders);
+                    showToast(translations[currentLang].duplicateTT, 'warning');
                     return;
                 }
+                console.log('✅ [CREATE] No duplicates found – proceeding.');
             }
 
             amount = Math.round(amount * 100) / 100;
@@ -2364,20 +2612,24 @@
             try {
                 const user = auth.currentUser;
                 const createdByName = getDisplayName(user);
+                const customer = membersList.find(m => m.id === memberId);
+                const memberIdCustom = customer ? customer.memberId : '';
 
                 const docData = {
                     type: 'profit_income',
                     transactionType: 'income',
-                    incomeType: incomeType,
-                    amount: amount,
+                    memberId,
+                    memberIdCustom,
+                    incomeType,
+                    amount,
                     date: new Date(date),
                     note: description,
-                    description: description,
+                    description,
                     status: 'completed',
-                    paymentMethod: paymentMethod,
+                    paymentMethod,
                     ttNumber: (paymentMethod === 'cash' ? '' : ttNumber),
                     bankName: (paymentMethod === 'cash' ? '' : bankName),
-                    createdByName: createdByName,
+                    createdByName,
                     createdBy: createdByName,
                     createdByEmail: user ? user.email : 'admin@cabo.com',
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -2390,12 +2642,13 @@
                 const docRef = await db.collection('transactions').add(docData);
 
                 await logAudit('created', 'transactions', docRef.id, {
-                    incomeType: incomeType,
-                    amount: amount,
-                    paymentMethod: paymentMethod,
-                    date: date,
-                    description: description
-                }, `Deposit created: ${incomeType} - ${amount} ETB`);
+                    memberId,
+                    incomeType,
+                    amount,
+                    paymentMethod,
+                    date,
+                    description
+                }, `Deposit created: ${incomeType} - ${amount} ETB for customer ${customer ? customer.fullName : 'Unknown'}`);
 
                 showToast(translations[currentLang].depositRecorded, 'success');
                 document.getElementById('depositForm').reset();
@@ -2405,6 +2658,8 @@
                 document.getElementById('ttNumber').value = '';
                 document.getElementById('transferDate').value = '';
                 document.getElementById('bankName').value = '';
+                document.getElementById('memberId').value = '';
+                document.getElementById('memberSearch').value = '';
                 toggleConditionalFields();
 
                 await loadDeposits();
@@ -2417,7 +2672,6 @@
             }
         }
 
-        // ---- Helper ----
         function getDisplayName(user) {
             if (!user) return 'Admin';
             if (currentUserDisplayName) return currentUserDisplayName;
@@ -2427,7 +2681,7 @@
         }
 
         // ============================================================
-        // PRINT SLIP (A5 landscape, with audit logging)
+        // PRINT SLIP
         // ============================================================
         async function printDepositSlip(docId) {
             const deposit = allDeposits.find(d => d.id === docId);
@@ -2446,7 +2700,7 @@
                         status: 'printed',
                         printed: true,
                         printedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                        printedBy: printedBy
+                        printedBy
                     });
                     deposit.status = 'printed';
                     deposit.printed = true;
@@ -2456,7 +2710,7 @@
                     renderTable(currentItems);
                 }
 
-                await logAudit('printed', 'transactions', docId, { printedBy: printedBy },
+                await logAudit('printed', 'transactions', docId, { printedBy },
                     `Deposit slip printed: ${deposit.incomeType || 'Unknown'} - ${deposit.amount || 0} ETB`);
 
                 showToast(translations[currentLang].printRecorded, 'success');
@@ -2512,7 +2766,7 @@
         }
 
         // ============================================================
-        // UPDATE USER INFO (role + audit + users nav)
+        // UPDATE USER INFO
         // ============================================================
         function updateUserInfo() {
             const roleMap = { admin: 'ADMIN', manager: 'MANAGER', teller: 'TELLER', accountant: 'ACCOUNTANT',
@@ -2571,6 +2825,10 @@
                 } else {
                     formSection.style.display = 'none';
                 }
+
+                await loadMembersForSelect();
+                setupMainMemberSearch();
+                setupEditMemberSearch();
 
                 initLanguage();
 
@@ -2633,6 +2891,8 @@
                     document.getElementById('ttNumber').value = '';
                     document.getElementById('transferDate').value = '';
                     document.getElementById('bankName').value = '';
+                    document.getElementById('memberId').value = '';
+                    document.getElementById('memberSearch').value = '';
                     toggleConditionalFields();
                 });
 
@@ -2657,6 +2917,8 @@
                 window.toggleConditionalFields = toggleConditionalFields;
                 window.toggleEditConditionalFields = toggleEditConditionalFields;
                 window.closeEditModal = closeEditModal;
+                window.selectMainMember = selectMainMember;
+                window.selectEditMember = selectEditMember;
             });
         });
     </script>
