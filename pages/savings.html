@@ -2313,7 +2313,7 @@
         }
 
         // ============================================================
-        // SAVE DEPOSIT (with audit logging)
+        // SAVE DEPOSIT (with audit logging) - DUPLICATE CHECK FIXED
         // ============================================================
         async function saveDeposit(e) {
             e.preventDefault();
@@ -2348,6 +2348,7 @@
                 if (savingsType === 'bank' && !bankName) { showToast('Please enter the bank name.', 'warning'); return; }
             }
 
+            // DUPLICATE CHECK – same customer only
             if (savingsType !== 'cash' && ttNumber && transferDate) {
                 try {
                     const startOfDay = new Date(transferDate);
@@ -2357,6 +2358,7 @@
 
                     const dupSnap = await db.collection('transactions')
                         .where('type', '==', 'savings')
+                        .where('memberId', '==', memberId)      // ✅ Same customer only
                         .where('ttNumber', '==', ttNumber)
                         .where('transferDate', '>=', startOfDay)
                         .where('transferDate', '<=', endOfDay)
@@ -2439,7 +2441,7 @@
         }
 
         // ============================================================
-        // EDIT SAVINGS (with audit logging)
+        // EDIT SAVINGS (with audit logging) - DUPLICATE CHECK FIXED
         // ============================================================
         function editSavings(txId) {
             if (!canEditSavings()) {
@@ -2513,6 +2515,35 @@
                 if (!ttNumber) { showToast('Please enter the TT number.', 'warning'); return; }
                 if (!transferDate) { showToast('Please select the transfer date.', 'warning'); return; }
                 if (savingsType === 'bank' && !bankName) { showToast('Please enter the bank name.', 'warning'); return; }
+            }
+
+            // DUPLICATE CHECK – same customer, exclude current doc
+            if (savingsType !== 'cash' && ttNumber && transferDate) {
+                try {
+                    const startOfDay = new Date(transferDate);
+                    startOfDay.setHours(0, 0, 0, 0);
+                    const endOfDay = new Date(transferDate);
+                    endOfDay.setHours(23, 59, 59, 999);
+
+                    const dupSnap = await db.collection('transactions')
+                        .where('type', '==', 'savings')
+                        .where('memberId', '==', memberId)      // ✅ Same customer only
+                        .where('ttNumber', '==', ttNumber)
+                        .where('transferDate', '>=', startOfDay)
+                        .where('transferDate', '<=', endOfDay)
+                        .get();
+
+                    // Exclude the current document being edited
+                    const hasDuplicate = dupSnap.docs.some(doc => doc.id !== txId);
+                    if (hasDuplicate) {
+                        showToast(translations[currentLang].duplicateTT, 'warning');
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Duplicate check error:', error);
+                    showToast('Error checking duplicates. Please try again.', 'error');
+                    return;
+                }
             }
 
             const btn = document.getElementById('updateSavingsBtn');
